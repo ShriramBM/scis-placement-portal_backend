@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { applyToCompany } from "../controllers/application.controller";
+import { applyToCompany, selectStudent } from "../controllers/application.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import { authorize } from "../middleware/role.middleware";
 import { getMyApplications } from "../controllers/application.controller";
@@ -25,6 +25,13 @@ router.get(
   authenticate,
   // authorize("STREAM_COORDINATOR", "PLACEMENT_COORDINATOR"),
   getAllApplications
+);
+
+router.put(
+  "/:id/select",
+  authenticate,
+  //authorize("PLACEMENT_COORDINATOR"),
+  selectStudent
 );
 
 

@@ -19,7 +19,7 @@ router.get("/me", authenticate, authorize("STUDENT"), getMyProfile);
 router.put("/me", authenticate, authorize("STUDENT"), updateMyProfile);
 
 // Coordinator access
-router.get("/", authenticate, authorize("STREAM_COORDINATOR", "PLACEMENT_COORDINATOR"), getAllStudents);
+router.get("/", authenticate, authorize("STUDENT","STREAM_COORDINATOR", "PLACEMENT_COORDINATOR"), getAllStudents);
 router.get("/:id", authenticate, authorize("STREAM_COORDINATOR", "PLACEMENT_COORDINATOR"), getStudentById);
 
 router.put("/:id/block", authenticate, authorize("PLACEMENT_COORDINATOR"), blockStudent);
