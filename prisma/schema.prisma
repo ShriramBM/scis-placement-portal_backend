@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//////////////////////////////////////
+// ENUMS
+//////////////////////////////////////
+
+enum Department {
+  MCA
+  MTECH
+}
+
+enum Stream {
+  CSE
+  AI
+  IT
+}
+
+enum Role {
+  PLACEMENT_OFFICER
+  PLACEMENT_COORDINATOR
+  STREAM_COORDINATOR
+  STUDENT
+}
+
+enum ApplicationStatus {
+  APPLIED
+  REJECTED
+  IGNORED
+  SHORTLISTED
+  SELECTED
+}
+
+//////////////////////////////////////
+// USER MODEL (Authentication Only)
+//////////////////////////////////////
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+
+  role      Role     @default(STUDENT)
+
+  placed    Boolean  @default(false)
+  blocked   Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  //////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////
+
+  studentProfile    StudentProfile?
+
+  applications      Application[]
+  createdCompanies Company[]
+
+  studentPlacements PlacementRecord[] @relation("StudentPlacement")
+
+  createdPlacements PlacementRecord[] @relation("CoordinatorCreatedPlacement")
+
+  remarksAdded      PlacementRemark[] @relation("RemarkAddedBy")
+}
+
+//////////////////////////////////////
+// STUDENT PROFILE (Academic Details)
+//////////////////////////////////////
+
+model StudentProfile {
+  id           Int    @id @default(autoincrement())
+
+  user         User   @relation(fields: [userId], references: [id])
+  userId       Int    @unique
+
+  department   Department
+  stream       Stream?
+
+  rollNo       String @unique
+  cgpa         Float
+  batchYear    Int
+  phone        String
+  resumeUrl    String?
+
+  backlogs     Int     @default(0)
+  tenthScore   Float?
+  twelfthScore Float?
+
+  createdAt    DateTime @default(now())
+}
+
+//////////////////////////////////////
+// COMPANY MODEL
+//////////////////////////////////////
+
+model Company {
+  id             Int      @id @default(autoincrement())
+  name           String
+  description    String
+  package        Float
+
+  department     Department
+  streamsAllowed Stream[]
+
+  deadline       DateTime
+
+  //////////////////////////////////////
+  // AUDIT FIELDS
+  //////////////////////////////////////
+
+  createdBy      User     @relation(fields: [createdById], references: [id])
+  createdById    Int
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  //////////////////////////////////////
+
+  applications     Application[]
+  placementRecords PlacementRecord[]
+}
+
+//////////////////////////////////////
+// APPLICATION MODEL
+//////////////////////////////////////
+
+model Application {
+  id        Int      @id @default(autoincrement())
+  status    ApplicationStatus @default(APPLIED)
+
+  student   User   @relation(fields: [studentId], references: [id])
+  studentId Int
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId Int
+
+  @@unique([studentId, companyId])
+}
+
+//////////////////////////////////////
+// PLACEMENT RECORD
+//////////////////////////////////////
+
+model PlacementRecord {
+  id          Int      @id @default(autoincrement())
+
+  student     User     @relation("StudentPlacement", fields: [studentId], references: [id])
+  studentId   Int
+
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId   Int
+
+  remarks     String?
+  issues      String?
+  joiningDate DateTime?
+  packageFinal Float?
+
+  createdBy   User     @relation("CoordinatorCreatedPlacement", fields: [createdById], references: [id])
+  createdById Int
+
+  createdAt   DateTime @default(now())
+
+  remarksHistory PlacementRemark[]
+
+  @@unique([studentId, companyId])
+}
+
+//////////////////////////////////////
+// PLACEMENT REMARK
+//////////////////////////////////////
+
+model PlacementRemark {
+  id           Int @id @default(autoincrement())
+
+  placement    PlacementRecord @relation(fields: [placementId], references: [id])
+  placementId  Int
+
+  comment      String
+
+  addedBy      User @relation("RemarkAddedBy", fields: [addedById], references: [id])
+  addedById    Int
+
+  createdAt    DateTime @default(now())
+}
