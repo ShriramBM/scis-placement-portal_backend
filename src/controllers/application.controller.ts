@@ -151,3 +151,51 @@ export const getAllApplications = async (req: any, res: any) => {
     });
   }
 };
+
+
+
+//*this is for placement coordinators to view details of a specific application and mark it as selected or rejected
+export const selectStudent = async (req: any, res: any) => {
+  try {
+    const applicationId = parseInt(req.params.id);
+
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      include: {
+        student: true,
+        company: true,
+      },
+    });
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // Update application status
+    await prisma.application.update({
+      where: { id: applicationId },
+      data: { status: "SELECTED" },
+    });
+
+    // Mark student as placed
+    await prisma.user.update({
+      where: { id: application.studentId },
+      data: { placed: true },
+    });
+
+    // Create Placement Record
+    await prisma.placementRecord.create({
+      data: {
+        studentId: application.studentId,
+        companyId: application.companyId,
+        createdById: req.user.id,
+      },
+    });
+
+    res.json({ message: "Student marked as SELECTED" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to mark selected" });
+  }
+};
