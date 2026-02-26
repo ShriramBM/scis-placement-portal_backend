@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
   res.send("SCIS Placement Portal API Running 🚀");
 });
 
-const PORT = 3000;
+const PORT = 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

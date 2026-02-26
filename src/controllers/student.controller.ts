@@ -10,6 +10,9 @@ export const getMyProfile = async (req: any, res: Response) => {
   try {
     const profile = await prisma.studentProfile.findUnique({
       where: { userId: req.user.id },
+      include: {
+        AcadamicDetails: true,
+      },
     });
 
     if (!profile) {
@@ -34,16 +37,43 @@ export const getMyProfile = async (req: any, res: Response) => {
 */
 export const updateMyProfile = async (req: any, res: Response) => {
   try {
-    const { rollNo, cgpa, batchYear, phone, resumeLink } = req.body;
+    const {
+      rollNo,
+      phone,
+      resumeUrl,
+      alternateEmail,
+      linkedInUrl,
+      githubUrl,
+      gender,
+      dob,
+      category,
+      permanentAddress,
+      currentAddress,
+      preferredJobLocation,
+      carreerType,
+      stream,
+    } = req.body;
 
     const updatedProfile = await prisma.studentProfile.update({
       where: { userId: req.user.id },
       data: {
         rollNo,
-        cgpa: cgpa ? parseFloat(cgpa) : undefined,
-        batchYear: batchYear ? parseInt(batchYear) : undefined,
         phone,
-        resumeUrl: resumeLink,
+        resumeUrl,
+        alternateEmail,
+        linkedInUrl,
+        githubUrl,
+        gender,
+        dob: dob ? new Date(dob) : undefined,
+        category,
+        permanentAddress,
+        currentAddress,
+        preferredJobLocation,
+        carreerType,
+        stream,
+      },
+      include: {
+        AcadamicDetails: true,
       },
     });
 
@@ -94,7 +124,11 @@ export const getStudentById = async (req: Request, res: Response) => {
     const student = await prisma.user.findUnique({
       where: { id },
       include: {
-        studentProfile: true,
+        studentProfile: {
+          include: {
+            AcadamicDetails: true,
+          },
+        },
         applications: true,
       },
     });

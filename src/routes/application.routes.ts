@@ -30,7 +30,7 @@ router.get(
 router.put(
   "/:id/select",
   authenticate,
-  //authorize("PLACEMENT_COORDINATOR"),
+  // authorize("PLACEMENT_COORDINATOR"),
   selectStudent
 );
 

@@ -16,7 +16,6 @@ export const register = async (req: Request, res: Response) => {
       department,
       stream,
       rollNo,
-      cgpa,
       batchYear,
       phone,
     } = req.body;
@@ -31,7 +30,6 @@ export const register = async (req: Request, res: Response) => {
       !password ||
       !department ||
       !rollNo ||
-      !cgpa ||
       !batchYear ||
       !phone
     ) {
@@ -46,6 +44,8 @@ export const register = async (req: Request, res: Response) => {
         message: "Use official university email (@uohyd.ac.in)",
       });
     }
+
+  
 
     // Password strength
     if (password.length < 8) {
@@ -74,6 +74,16 @@ export const register = async (req: Request, res: Response) => {
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
+
+    const existingRollNo = await prisma.studentProfile.findUnique({
+      where: { rollNo },
+    });
+
+    if (existingRollNo) {
+      return res.status(400).json({
+        message: "Roll number already registered",
+      });
+    }   
 
     if (existingUser) {
       return res.status(400).json({
@@ -105,9 +115,8 @@ export const register = async (req: Request, res: Response) => {
         data: {
           userId: user.id,
           department,
-          stream: department === "MCA" ? null : stream,
+          stream: (department === "MCA" || department === "IMTECH") ? null : stream,
           rollNo,
-          cgpa: parseFloat(cgpa),
           batchYear: parseInt(batchYear),
           phone,
         },
@@ -187,7 +196,7 @@ export const login = async (req: Request, res: Response) => {
 };
 
 
-
+// placement coordinator login (same as regular login but with role check)
 export const placementCoordinatorLogin = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;

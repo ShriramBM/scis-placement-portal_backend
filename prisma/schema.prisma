@@ -11,9 +11,25 @@ datasource db {
 // ENUMS
 //////////////////////////////////////
 
+
 enum Department {
   MCA
   MTECH
+  IMTECH
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AcadLevel{
+  TENTH
+  TWELFTH
+  DIPLOMA
+  GRADUATION
+  POSTGRADUATION
 }
 
 enum Stream {
@@ -79,21 +95,38 @@ model StudentProfile {
 
   user         User   @relation(fields: [userId], references: [id])
   userId       Int    @unique
+  alternateEmail String?
+  linkedInUrl   String?
+  githubUrl     String?
+  gender        Gender @default(MALE)  //sorry for the default, can be changed during registration
+  dob           DateTime?
+  category      String?
+  permanentAddress String @default("")
+  currentAddress   String @default("")
+  preferredJobLocation String?
+  carreerType       String? // research, industry, undecided
+  batchYear    Int @default(0)
 
   department   Department
   stream       Stream?
+  AcadamicDetails AcademicRecord[] 
 
   rollNo       String @unique
-  cgpa         Float
-  batchYear    Int
   phone        String
   resumeUrl    String?
-
-  backlogs     Int     @default(0)
-  tenthScore   Float?
-  twelfthScore Float?
-
   createdAt    DateTime @default(now())
+}
+
+model AcademicRecord {
+  id           Int    @id @default(autoincrement())
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id])
+  studentProfileId Int
+  level        AcadLevel @default(GRADUATION)
+  institution_school_name   String @default("")
+  board String?
+  university String?
+  yearOfPassing Int @default(0)
+  percentage_cgpa Float @default(0.0)
 }
 
 //////////////////////////////////////
@@ -105,12 +138,21 @@ model Company {
   name           String
   description    String
   package        Float
-
   department     Department
   streamsAllowed Stream[]
-
+  jobTitle       String @default("")
+  address       String?
+  state           String?
+  country         String?
+  website         String?
+  type_of_organization String?
+  skillsRequired   String[] @default([])
+  jobLocation      String?
+  remarks           String?
+  no_vacancies        Int?
+  nature_of_business     String?
   deadline       DateTime
-
+  jd_file_path String?
   //////////////////////////////////////
   // AUDIT FIELDS
   //////////////////////////////////////
