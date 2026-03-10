@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { AcadLevel } from "@prisma/client";
 import prisma from "../config/prisma";
 
 /*
@@ -85,6 +86,76 @@ export const updateMyProfile = async (req: any, res: Response) => {
     console.error(error);
     res.status(500).json({
       message: "Failed to update profile",
+    });
+  }
+};
+
+/*
+|--------------------------------------------------------------------------
+| 2b Update Academic Records (logged-in student)
+|--------------------------------------------------------------------------
+*/
+export const updateMyAcademic = async (req: any, res: Response) => {
+  try {
+    const profile = await prisma.studentProfile.findUnique({
+      where: { userId: req.user.id },
+    });
+    if (!profile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    const { academicDetails } = req.body as {
+      academicDetails: Array<{
+        id?: number;
+        level: string;
+        institution_school_name: string;
+        board?: string | null;
+        university?: string | null;
+        yearOfPassing: number;
+        percentage_cgpa: number;
+      }>;
+    };
+
+    if (!Array.isArray(academicDetails)) {
+      return res.status(400).json({ message: "academicDetails must be an array" });
+    }
+
+    const validLevels = ["TENTH", "TWELFTH", "DIPLOMA", "GRADUATION", "POSTGRADUATION"];
+
+    await prisma.$transaction(async (tx) => {
+      await tx.academicRecord.deleteMany({
+        where: { studentProfileId: profile.id },
+      });
+
+      for (const row of academicDetails) {
+        const level = (validLevels.includes(row.level) ? row.level : "GRADUATION") as AcadLevel;
+        await tx.academicRecord.create({
+          data: {
+            studentProfileId: profile.id,
+            level,
+            institution_school_name: row.institution_school_name || "",
+            board: row.board || null,
+            university: row.university || null,
+            yearOfPassing: Number(row.yearOfPassing) || 0,
+            percentage_cgpa: Number(row.percentage_cgpa) || 0,
+          },
+        });
+      }
+    });
+
+    const updated = await prisma.studentProfile.findUnique({
+      where: { userId: req.user.id },
+      include: { AcadamicDetails: true },
+    });
+
+    res.json({
+      message: "Academic details updated successfully",
+      profile: updated,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to update academic details",
     });
   }
 };
@@ -217,6 +288,34 @@ export const markStudentPlaced = async (
 
     res.json({
       message: "Student marked as placed",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to update placement status",
+    });
+  }
+};
+
+/*
+|--------------------------------------------------------------------------
+| 8️⃣ Mark Student as Unplaced
+|--------------------------------------------------------------------------
+*/
+export const markStudentUnplaced = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const id = parseInt(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
+
+    await prisma.user.update({
+      where: { id },
+      data: { placed: false },
+    });
+
+    res.json({
+      message: "Student marked as unplaced",
     });
   } catch (error) {
     console.error(error);
