@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { applyToCompany, selectStudent } from "../controllers/application.controller";
+import { applyToCompany, selectStudent, getCompanyApplicantsForExport } from "../controllers/application.controller";
 import { authenticate } from "../middleware/auth.middleware";
 import { authorize } from "../middleware/role.middleware";
 import { getMyApplications } from "../controllers/application.controller";
@@ -23,8 +23,13 @@ router.get(
 router.get(
   "/all",
   authenticate,
-  // authorize("STREAM_COORDINATOR", "PLACEMENT_COORDINATOR"),
   getAllApplications
+);
+
+router.get(
+  "/company/:companyId/export",
+  authenticate,
+  getCompanyApplicantsForExport
 );
 
 router.put(

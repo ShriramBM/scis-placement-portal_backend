@@ -152,6 +152,86 @@ export const getAllApplications = async (req: any, res: any) => {
   }
 };
 
+/**
+ * Get applicants for a company (after deadline) with full profile + academic details for sheet export.
+ * Stream coordinator can generate sheets only after company deadline.
+ */
+export const getCompanyApplicantsForExport = async (req: any, res: any) => {
+  try {
+    const companyId = parseInt(req.params.companyId);
+    if (isNaN(companyId)) {
+      return res.status(400).json({ message: "Invalid company ID" });
+    }
+
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+    });
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    if (new Date() <= company.deadline) {
+      return res.status(400).json({
+        message: "Sheet can be generated only after the company deadline has passed",
+      });
+    }
+
+    const applications = await prisma.application.findMany({
+      where: { companyId },
+      include: {
+        student: {
+          include: {
+            studentProfile: {
+              include: {
+                AcadamicDetails: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const applicants = applications.map((app) => {
+      const u = app.student;
+      const p = u.studentProfile;
+      const acad = p?.AcadamicDetails || [];
+      const byLevel = (level: string) => acad.find((a) => a.level === level);
+
+      const tenth = byLevel("TENTH");
+      const twelfth = byLevel("TWELFTH");
+      const ug = byLevel("GRADUATION") || byLevel("DIPLOMA");
+      const pg = byLevel("POSTGRADUATION");
+
+      const course = [p?.department ?? "", p?.stream ?? ""].filter(Boolean).join(" ");
+
+      return {
+        regNumber: p?.rollNo ?? "",
+        name: u.name ?? "",
+        phone: p?.phone ?? "",
+        email: u.email ?? "",
+        college: pg?.institution_school_name || pg?.university || "",
+        course: course ?? "",
+        yearOfPassing: pg?.yearOfPassing ?? "",
+        tenthCgpaPct: tenth?.percentage_cgpa ?? "",
+        twelfthCgpaPct: twelfth?.percentage_cgpa ?? "",
+        ugCgpaPct: ug?.percentage_cgpa ?? "",
+        pgCgpaPct: pg?.percentage_cgpa ?? "",
+        resume: p?.resumeUrl ?? "",
+      };
+    });
+
+    return res.json({
+      companyName: company.name,
+      applicants,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to fetch applicants for export",
+    });
+  }
+};
+
 
 
 //*this is for placement coordinators to view details of a specific application and mark it as selected or rejected
