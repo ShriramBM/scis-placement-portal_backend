@@ -59,8 +59,11 @@ INSERT INTO "User" (id, name, email, password, role, placed, blocked, "createdAt
 (40, 'Arun Prabhu', 'arun.prabhu@uohyd.ac.in', '$2b$10$JSrxUI2RSwcrmTe4SQyaS.q8j5vanVdfBbyJqNqyvf4yHXUYhvxBa', 'STUDENT', false, false, NOW()),
 (41, 'Deepika Murthy', 'deepika.murthy@uohyd.ac.in', '$2b$10$JSrxUI2RSwcrmTe4SQyaS.q8j5vanVdfBbyJqNqyvf4yHXUYhvxBa', 'STUDENT', false, false, NOW());
 
--- Reset sequence so next insert gets 42
-SELECT setval(pg_get_serial_sequence('"User"', 'id'), 41);
+-- Stream Coordinator (for demo; login page shows this cred)
+INSERT INTO "User" (id, name, email, password, role, placed, blocked, "createdAt") VALUES
+(42, 'Stream Coordinator', 'stream.coordinator@scis.edu', '$2b$10$JSrxUI2RSwcrmTe4SQyaS.q8j5vanVdfBbyJqNqyvf4yHXUYhvxBa', 'STREAM_COORDINATOR', false, false, NOW());
+
+SELECT setval(pg_get_serial_sequence('"User"', 'id'), 42);
 
 -- -----------------------------------------------------------------------------
 -- 2. STUDENT PROFILES (one per student, userId 2..41). Profile id 1..40
