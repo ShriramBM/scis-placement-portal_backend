@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
+import {
+  buildPaginatedResponse,
+  parsePaginationQuery,
+} from "../utils/pagination";
 
 export const applyToCompany = async (req: Request, res: Response) => {
   try {
@@ -111,10 +115,27 @@ export const applyToCompany = async (req: Request, res: Response) => {
 
 export const getMyApplications = async (req: any, res: any) => {
   try {
+    const pagination = parsePaginationQuery(req.query as Record<string, unknown>);
+    const where = { studentId: req.user.id };
+
+    if (pagination) {
+      const [applications, total] = await Promise.all([
+        prisma.application.findMany({
+          where,
+          include: { company: true },
+          orderBy: { id: "desc" },
+          skip: pagination.skip,
+          take: pagination.limit,
+        }),
+        prisma.application.count({ where }),
+      ]);
+      return res.json(buildPaginatedResponse(applications, total, pagination));
+    }
+
     const applications = await prisma.application.findMany({
-      where: { studentId: req.user.id },
+      where,
       include: {
-        company: true, 
+        company: true,
       },
       orderBy: {
         id: "desc",
@@ -132,6 +153,28 @@ export const getMyApplications = async (req: any, res: any) => {
 
 export const getAllApplications = async (req: any, res: any) => {
   try {
+    const pagination = parsePaginationQuery(req.query as Record<string, unknown>);
+
+    if (pagination) {
+      const [applications, total] = await Promise.all([
+        prisma.application.findMany({
+          include: {
+            company: true,
+            student: {
+              include: {
+                studentProfile: true,
+              },
+            },
+          },
+          orderBy: { id: "desc" },
+          skip: pagination.skip,
+          take: pagination.limit,
+        }),
+        prisma.application.count(),
+      ]);
+      return res.json(buildPaginatedResponse(applications, total, pagination));
+    }
+
     const applications = await prisma.application.findMany({
       include: {
         company: true,
@@ -141,6 +184,7 @@ export const getAllApplications = async (req: any, res: any) => {
           },
         },
       },
+      orderBy: { id: "desc" },
     });
 
     res.json(applications);

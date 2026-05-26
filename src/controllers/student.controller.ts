@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { AcadLevel } from "@prisma/client";
 import prisma from "../config/prisma";
+import {
+  buildPaginatedResponse,
+  parsePaginationQuery,
+} from "../utils/pagination";
 
 /*
 |--------------------------------------------------------------------------
@@ -167,11 +171,29 @@ export const updateMyAcademic = async (req: any, res: Response) => {
 */
 export const getAllStudents = async (req: any, res: Response) => {
   try {
+    const pagination = parsePaginationQuery(req.query as Record<string, unknown>);
+    const where = { role: "STUDENT" as const };
+
+    if (pagination) {
+      const [students, total] = await Promise.all([
+        prisma.user.findMany({
+          where,
+          include: { studentProfile: true },
+          orderBy: { name: "asc" },
+          skip: pagination.skip,
+          take: pagination.limit,
+        }),
+        prisma.user.count({ where }),
+      ]);
+      return res.json(buildPaginatedResponse(students, total, pagination));
+    }
+
     const students = await prisma.user.findMany({
-      where: { role: "STUDENT" },
+      where,
       include: {
         studentProfile: true,
       },
+      orderBy: { name: "asc" },
     });
 
     res.json(students);

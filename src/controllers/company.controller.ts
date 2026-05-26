@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
+import {
+  buildPaginatedResponse,
+  parsePaginationQuery,
+} from "../utils/pagination";
 
 const normalizeSkills = (value: unknown): string[] => {
   if (Array.isArray(value)) {
@@ -88,6 +92,20 @@ export const addCompany = async (req: Request, res: Response) => {
 
 export const getCompanies = async (req: Request, res: Response) => {
   try {
+    const pagination = parsePaginationQuery(req.query as Record<string, unknown>);
+
+    if (pagination) {
+      const [companies, total] = await Promise.all([
+        prisma.company.findMany({
+          orderBy: { deadline: "asc" },
+          skip: pagination.skip,
+          take: pagination.limit,
+        }),
+        prisma.company.count(),
+      ]);
+      return res.json(buildPaginatedResponse(companies, total, pagination));
+    }
+
     const companies = await prisma.company.findMany({
       orderBy: { deadline: "asc" },
     });
