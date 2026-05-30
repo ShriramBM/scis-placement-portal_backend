@@ -68,6 +68,9 @@ model User {
   placed    Boolean  @default(false)
   blocked   Boolean  @default(false)
 
+  coordinatorDepartment Department?
+  coordinatorStream     Stream?
+
   createdAt DateTime @default(now())
 
   //////////////////////////////////////

@@ -186,3 +186,20 @@ INSERT INTO "Application" (status, "studentId", "companyId") VALUES
 
 -- Optional: add dummy resume URLs for export sheet
 UPDATE "StudentProfile" SET "resumeUrl" = '/uploads/resumes/' || "rollNo" || '.pdf' WHERE id <= 40;
+
+-- -----------------------------------------------------------------------------
+-- 5. COORDINATOR DEPARTMENT ASSIGNMENTS (MCA, MTech CS, MTech AI, IMTech)
+-- Password for all: password123
+-- -----------------------------------------------------------------------------
+INSERT INTO "User" (name, email, password, role, placed, blocked, "coordinatorDepartment", "coordinatorStream", "createdAt") VALUES
+('MCA Coordinator', 'mca.pc@scis.edu', '$2b$10$JSrxUI2RSwcrmTe4SQyaS.q8j5vanVdfBbyJqNqyvf4yHXUYhvxBa', 'PLACEMENT_COORDINATOR', false, false, 'MCA', NULL, NOW()),
+('MTech CS Coordinator', 'mtech.cse.pc@scis.edu', '$2b$10$JSrxUI2RSwcrmTe4SQyaS.q8j5vanVdfBbyJqNqyvf4yHXUYhvxBa', 'STREAM_COORDINATOR', false, false, 'MTECH', 'CSE', NOW()),
+('MTech AI Coordinator', 'mtech.ai.pc@scis.edu', '$2b$10$JSrxUI2RSwcrmTe4SQyaS.q8j5vanVdfBbyJqNqyvf4yHXUYhvxBa', 'STREAM_COORDINATOR', false, false, 'MTECH', 'AI', NOW()),
+('IMTech Coordinator', 'imtech.pc@scis.edu', '$2b$10$JSrxUI2RSwcrmTe4SQyaS.q8j5vanVdfBbyJqNqyvf4yHXUYhvxBa', 'PLACEMENT_COORDINATOR', false, false, 'IMTECH', NULL, NOW())
+ON CONFLICT (email) DO UPDATE SET
+  "coordinatorDepartment" = EXCLUDED."coordinatorDepartment",
+  "coordinatorStream" = EXCLUDED."coordinatorStream";
+
+UPDATE "User" SET "coordinatorDepartment" = 'MCA', "coordinatorStream" = NULL WHERE email = 'coordinator@scis.edu';
+UPDATE "User" SET "coordinatorDepartment" = 'MTECH', "coordinatorStream" = 'CSE' WHERE email = 'stream.coordinator@scis.edu';
+

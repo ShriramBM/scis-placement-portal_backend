@@ -3,6 +3,7 @@ import {
   getMyProfile,
   updateMyProfile,
   updateMyAcademic,
+  createStudent,
   getAllStudents,
   getStudentById,
   blockStudent,
@@ -22,6 +23,7 @@ router.put("/me", authenticate, authorize("STUDENT"), updateMyProfile);
 router.put("/me/academic", authenticate, authorize("STUDENT"), updateMyAcademic);
 
 // Coordinator access
+router.post("/", authenticate, authorize("STREAM_COORDINATOR", "PLACEMENT_COORDINATOR"), createStudent);
 router.get("/", authenticate, authorize("STREAM_COORDINATOR", "PLACEMENT_COORDINATOR"), getAllStudents);
 router.get("/:id", authenticate, authorize("STREAM_COORDINATOR", "PLACEMENT_COORDINATOR"), getStudentById);
 

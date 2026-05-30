@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes";
 import companyRoutes from "./routes/company.routes";
 import applicationRoutes from "./routes/application.routes";
 import studentRoutes from "./routes/student.routes";
+import statsRoutes from "./routes/stats.routes";
 
 dotenv.config();
 
@@ -16,7 +17,12 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -32,6 +38,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/application", applicationRoutes);
+app.use("/api/stats", statsRoutes);
 
 app.get("/", (req, res) => {
   res.send("SCIS Placement Portal API Running 🚀");

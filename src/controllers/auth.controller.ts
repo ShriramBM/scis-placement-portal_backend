@@ -165,7 +165,7 @@ export const login = async (req: Request, res: Response) => {
         message: "Invalid credentials",
       });
     }
-    console.log(email, password);
+
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
@@ -187,6 +187,8 @@ export const login = async (req: Request, res: Response) => {
       message: "Login successful",
       token,
       role: user.role,
+      coordinatorDepartment: user.coordinatorDepartment,
+      coordinatorStream: user.coordinatorStream,
     });
   } catch (error) {
     console.error(error);
